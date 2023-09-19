@@ -1,22 +1,20 @@
 import odrive
 from odrive.enums import *
 import time
-import math
 import matplotlib.pyplot as plt
+import paho.mqtt.client as mqtt
 
-# Enabling interactive mode for real-time plotting
-plt.ion()
+# Configura tu cliente MQTT
+global value
 
-# Create lists to store data for plotting
-timestamps = []
-positions = []
-intensities = []
-voltages = []
-torques = []
-positions2=[]
+received_message = False  # Bandera para controlar si se ha recibido un mensaje
+
+
+
 # Find a connected ODrive (this will block until you connect one)
 print("Finding an ODrive...")
 my_drive = odrive.find_any()
+
 
 # Calibrate motor and wait for it to finish
 print("Starting calibration...")
@@ -34,14 +32,52 @@ my_drive.axis0.motor.config.current_lim = 30
 my_drive.axis0.controller.config.vel_limit = 100
 
 
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code {0}".format(str(rc)))
+    client.subscribe("Odrive")
+
+def on_message(client, userdata, msg):
+    global received_message  # Usamos la bandera global
+    print("Mensaje recibido -> " + msg.topic + " " + str(msg.payload))
+    global message_payload  # Almacenamos el valor del mensaje
+    message_payload = msg.payload
+    received_message = True  # Cambiamos la bandera a True cuando se recibe un mensaje
+client = mqtt.Client("digi_mqtt_test")
+client.on_connect = on_connect
+client.on_message = on_message
+
+client.connect('tonivivescabaleiro.com', 1883)
+
+client.loop_start()  # Usamos loop_start() en lugar de loop_forever()
+
+# Mantén el bucle hasta que se reciba un mensaje
+while not received_message:
+    pass  # Espera hasta que received_message sea True
+
+print("Valor del mensaje recibido: "+ str(message_payload.decode("utf-8")) )
+
+setpoint = float(message_payload.decode("utf-8"));
+
+# Enabling interactive mode for real-time plotting
+plt.ion()
+
+# Create lists to store data for plotting
+timestamps = []
+positions = []
+intensities = []
+voltages = []
+torques = []
+positions2=[]
+
 
 # Create a figure for plotting
 fig, (ax1, ax2, ax3, ax4,ax5) = plt.subplots(5, 1, figsize=(10, 8))
 
 # Main loop for data collection and plotting
 t0 = time.monotonic()
-setpoint = 40
 i = 0
+
+
 try:
     while i<2:
         position = my_drive.axis0.encoder.pos_estimate
