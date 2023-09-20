@@ -39,7 +39,7 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     global received_message  # Usamos la bandera global
-    print("Mensaje recibido -> " + msg.topic + " " + str(msg.payload))
+    #print("Mensaje recibido -> " + msg.topic + " " + str(msg.payload))
     global message_payload  # Almacenamos el valor del mensaje
     global setpoint
     message_payload = msg.payload
@@ -60,7 +60,7 @@ client.loop_start()  # Usamos loop_start() en lugar de loop_forever()
 while received_message == False:
     pass  # Espera hasta que received_message sea True
 
-print("Valor del mensaje recibido: "+ str(message_payload.decode("utf-8")) )
+#print("Valor del mensaje recibido: "+ str(message_payload.decode("utf-8")) )
 
 
 # Enabling interactive mode for real-time plotting
@@ -72,11 +72,10 @@ positions = []
 intensities = []
 voltages = []
 torques = []
-positions2=[]
 
 
 # Create a figure for plotting
-fig, (ax1, ax2, ax3, ax4,ax5) = plt.subplots(5, 1, figsize=(10, 8))
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 8))
 
 # Main loop for data collection and plotting
 t0 = time.monotonic()
@@ -85,8 +84,6 @@ i = 0
 try:
     
     while True: 
-           
-      while received_message == True:
         position = my_drive.axis0.encoder.pos_estimate
         position2 = my_drive.axis0.motor.I_bus
 
@@ -96,12 +93,9 @@ try:
         # Append data to lists
         timestamps.append(time.monotonic() - t0)
         positions.append(position)
-        positions2.append(position2)
         intensities.append(intensity)
         voltages.append(voltage)
         torques.append(torque)
-
-        # Update the plot
         ax1.clear()
         ax1.plot(timestamps, positions, label='Position')
         ax1.set_ylabel('Position')
@@ -124,10 +118,6 @@ try:
         ax4.set_ylabel('Torque (N.cm)')
         ax4.legend()
         
-        ax5.clear()
-        ax5.plot(timestamps, positions2, label='Position2')
-        ax5.set_ylabel('Position2')
-        ax5.legend()
 
         data_to_publish={
         "timestamp":(time.monotonic() - t0),
@@ -141,36 +131,32 @@ try:
 
         plt.pause(0.01)
 
-        # Set the position setpoint
-        my_drive.axis0.controller.input_pos = setpoint
 
-        current_state = my_drive.axis0.current_state
+        
+        if received_message == True:
+            
+            # Update the plot
+           
+            # Set the position setpoint
+            my_drive.axis0.controller.input_pos = setpoint
 
-        if current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
-            if abs(position - setpoint) < 0.05:
-                if my_drive.axis0.controller.trajectory_done:
-                    received_message = False
-                    if setpoint == 0:
-                        final_data_to_publish={
-                        "timestamp":timestamps,
-                        "position":positions,
-                        "intensity":intensities,
-                        "voltage" :voltages,
-                        "torque" :torques
-                        }
-                        client.publish("finalData", str(final_data_to_publish))
+            current_state = my_drive.axis0.current_state
+
+            if current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
+                if abs(position - setpoint) < 0.05:
+                    if my_drive.axis0.controller.trajectory_done:
                         received_message = False
+                        if setpoint == 0:
+                            final_data_to_publish={
+                            "timestamp":timestamps,
+                            "position":positions,
+                            "intensity":intensities,
+                            "voltage" :voltages,
+                            "torque" :torques
+                            }
+                            client.publish("finalData", str(final_data_to_publish))
+                            received_message = False
 
-                    
-
-                print("El motor ha llegado a la posición deseada.")
-                
-
-                
-            else:
-                print("El motor está en control en bucle cerrado pero no ha llegado a la posición deseada.")
-        else:
-            print("El motor no está en control en bucle cerrado.")
 
 
 except KeyboardInterrupt:
