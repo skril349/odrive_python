@@ -4,42 +4,16 @@ import matplotlib.pyplot as plt
 from odrive_setup import setup_odrive
 from plotter import update_plot
 from collections import deque
+from mqtt_setup import setup_mqtt, get_received_message, set_received_message, get_setpoint
+
 
 # Configuración de ODrive y MQTT
 my_drive = setup_odrive()
-# Configura tu cliente MQTT
-global value
-
-received_message = False  # Bandera para controlar si se ha recibido un mensaje
-
-
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code {0}".format(str(rc)))
-    client.subscribe("odrive")
-    client.subscribe("data")
-
-def on_message(client, userdata, msg):
-    global received_message  # Usamos la bandera global
-    #print("Mensaje recibido -> " + msg.topic + " " + str(msg.payload))
-    global message_payload  # Almacenamos el valor del mensaje
-    global setpoint
-    message_payload = msg.payload
-    if msg.topic == "odrive":
-        setpoint = float(message_payload.decode("utf-8"));
-
-        received_message = True  # Cambiamos la bandera a True cuando se recibe un mensaje
-
-client = mqtt.Client("digi_mqtt_test")
-client.on_connect = on_connect
-client.on_message = on_message
-
-client.connect('tonivivescabaleiro.com', 1883)
-
-client.loop_start()  # Usamos loop_start() en lugar de loop_forever()
+client = setup_mqtt()
 
 # Mantén el bucle hasta que se reciba un mensaje
-while received_message == False:
-    pass  # Espera hasta que received_message sea True
+while get_received_message() == False:
+    pass  # Espera hasta que get_received_message() sea True
 
 
 # Configuración del gráfico en tiempo real
@@ -95,19 +69,19 @@ try:
 
 
         
-        if received_message == True:
+        if get_received_message() == True:
             
             # Update the plot
            
             # Set the position setpoint
-            my_drive.axis0.controller.input_pos = setpoint
+            my_drive.axis0.controller.input_pos = get_setpoint()
 
             current_state = my_drive.axis0.current_state
 
            
             if my_drive.axis0.controller.trajectory_done:
-                received_message = False
-                if setpoint == 0:
+                set_received_message(False)
+                if get_setpoint() == 0:
                     final_data_to_publish={
                     "timestamp":timestamps,
                     "position":positions,
@@ -116,7 +90,7 @@ try:
                     "torque" :torques
                     }
                     client.publish("finalData", str(final_data_to_publish))
-                    received_message = False
+                    set_received_message(False)
 
 
 
