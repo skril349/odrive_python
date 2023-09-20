@@ -41,9 +41,11 @@ def on_message(client, userdata, msg):
     global received_message  # Usamos la bandera global
     print("Mensaje recibido -> " + msg.topic + " " + str(msg.payload))
     global message_payload  # Almacenamos el valor del mensaje
+    global setpoint
     message_payload = msg.payload
     if msg.topic == "odrive":
-        print("inside topic")
+        setpoint = float(message_payload.decode("utf-8"));
+
         received_message = True  # Cambiamos la bandera a True cuando se recibe un mensaje
 
 client = mqtt.Client("digi_mqtt_test")
@@ -56,12 +58,10 @@ client.loop_start()  # Usamos loop_start() en lugar de loop_forever()
 
 # Mantén el bucle hasta que se reciba un mensaje
 while received_message == False:
-    print("message false")
     pass  # Espera hasta que received_message sea True
 
 print("Valor del mensaje recibido: "+ str(message_payload.decode("utf-8")) )
 
-setpoint = float(message_payload.decode("utf-8"));
 
 # Enabling interactive mode for real-time plotting
 plt.ion()
@@ -148,16 +148,18 @@ try:
 
         if current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
             if abs(position - setpoint) < 0.05:
-                if setpoint == 0:
-                    final_data_to_publish={
-                    "timestamp":timestamps,
-                    "position":positions,
-                    "intensity":intensities,
-                    "voltage" :voltages,
-                    "torque" :torques
-                    }
-                    client.publish("finalData", str(final_data_to_publish))
+                if my_drive.axis0.controller.trajectory_done:
                     received_message = False
+                    if setpoint == 0:
+                        final_data_to_publish={
+                        "timestamp":timestamps,
+                        "position":positions,
+                        "intensity":intensities,
+                        "voltage" :voltages,
+                        "torque" :torques
+                        }
+                        client.publish("finalData", str(final_data_to_publish))
+                        received_message = False
 
                     
 
