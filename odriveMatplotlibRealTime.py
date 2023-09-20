@@ -34,14 +34,18 @@ my_drive.axis0.controller.config.vel_limit = 100
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code {0}".format(str(rc)))
-    client.subscribe("Odrive")
+    client.subscribe("odrive")
+    client.subscribe("data")
 
 def on_message(client, userdata, msg):
     global received_message  # Usamos la bandera global
     print("Mensaje recibido -> " + msg.topic + " " + str(msg.payload))
     global message_payload  # Almacenamos el valor del mensaje
     message_payload = msg.payload
-    received_message = True  # Cambiamos la bandera a True cuando se recibe un mensaje
+    if msg.topic == "odrive":
+        print("inside topic")
+        received_message = True  # Cambiamos la bandera a True cuando se recibe un mensaje
+
 client = mqtt.Client("digi_mqtt_test")
 client.on_connect = on_connect
 client.on_message = on_message
@@ -51,7 +55,8 @@ client.connect('tonivivescabaleiro.com', 1883)
 client.loop_start()  # Usamos loop_start() en lugar de loop_forever()
 
 # Mantén el bucle hasta que se reciba un mensaje
-while not received_message:
+while received_message == False:
+    print("message false")
     pass  # Espera hasta que received_message sea True
 
 print("Valor del mensaje recibido: "+ str(message_payload.decode("utf-8")) )
@@ -77,9 +82,11 @@ fig, (ax1, ax2, ax3, ax4,ax5) = plt.subplots(5, 1, figsize=(10, 8))
 t0 = time.monotonic()
 i = 0
 
-
 try:
-    while i<2:
+    
+    while True: 
+           
+      while received_message == True:
         position = my_drive.axis0.encoder.pos_estimate
         position2 = my_drive.axis0.motor.I_bus
 
@@ -122,6 +129,16 @@ try:
         ax5.set_ylabel('Position2')
         ax5.legend()
 
+        data_to_publish={
+        "timestamp":(time.monotonic() - t0),
+        "position":position,
+        "intensity":intensity,
+        "voltage" :voltage,
+        "torque" :torque
+        }
+        client.publish("data", str(data_to_publish))
+
+
         plt.pause(0.01)
 
         # Set the position setpoint
@@ -131,24 +148,28 @@ try:
 
         if current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
             if abs(position - setpoint) < 0.05:
-            
+                if setpoint == 0:
+                    final_data_to_publish={
+                    "timestamp":timestamps,
+                    "position":positions,
+                    "intensity":intensities,
+                    "voltage" :voltages,
+                    "torque" :torques
+                    }
+                    client.publish("finalData", str(final_data_to_publish))
+                    received_message = False
+
+                    
+
                 print("El motor ha llegado a la posición deseada.")
-                setpoint=0
                 
 
-               
+                
             else:
                 print("El motor está en control en bucle cerrado pero no ha llegado a la posición deseada.")
         else:
             print("El motor no está en control en bucle cerrado.")
 
+
 except KeyboardInterrupt:
     pass
-
-# Clean up and close the ODrive connection
-my_drive.axis0.requested_state = AXIS_STATE_IDLE
-my_drive.axis0.controller.input_pos = 0.0
-my_drive.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
-my_drive.axis0.controller.input_pos = 0.0
-plt.ioff()
-plt.show()
