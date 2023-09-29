@@ -4,6 +4,7 @@ import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from screeninfo import get_monitors
 
 # Configuración MQTT
 mqtt_host = "tonivivescabaleiro.com"
@@ -15,6 +16,15 @@ mqtt_topic_data = "data"
 def enviar_a_odrive():
     texto = texto_input.get()
     publish.single(mqtt_topic_odrive, texto, hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
+
+def cerrar_aplicacion():
+    root.quit()
+
+
+
+# Función para descargar datos (agrega tu funcionalidad)
+def descargar_datos():
+    pass  # Agrega aquí tu lógica para descargar datos
 
 # Función de callback cuando se recibe un mensaje MQTT en el tópico "data"
 def on_message(client, userdata, msg):
@@ -72,29 +82,27 @@ mqtt_client.loop_start()
 root = tk.Tk()
 root.title("Envío a ODrive y Gráficos en Tiempo Real")
 
-frame = ttk.Frame(root)
-frame.grid(row=0, column=0)
+# Hacer que la ventana sea pantalla completa
+root.attributes('-fullscreen', True)
 
-texto_label = ttk.Label(frame, text="Texto a enviar a ODrive:")
-texto_label.grid(row=0, column=0)
+# Obtiene el tamaño de la pantalla
+monitors = get_monitors()
+if len(monitors) > 0:
+    monitor = monitors[0]  # Utiliza el primer monitor encontrado
+    screen_width = monitor.width
+    screen_height = monitor.height
+else:
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
 
-texto_input = ttk.Entry(frame)
-texto_input.grid(row=0, column=1)
+# Ajusta el tamaño de la figura de Matplotlib para que coincida con el tamaño de la pantalla
+fig, axs = plt.subplots(2, 2, figsize=(screen_width / 100, screen_height / 100), sharex=True)
+fig.subplots_adjust(hspace=0.2, wspace=0.5, bottom=0.2)  # Ajusta el espacio horizontal con wspace
 
-enviar_button = ttk.Button(frame, text="Enviar a ODrive", command=enviar_a_odrive)
-enviar_button.grid(row=0, column=2)
-
-download_button = ttk.Button(frame, text="descargar datos")
-download_button.grid(row=0, column=3)
-
-# Configuración para los gráficos en tiempo real
-fig, axs = plt.subplots(2, 2, figsize=(6, 8), sharex=True)
-fig.subplots_adjust(hspace=0.5, wspace=0.5)  # Ajusta el espacio horizontal con wspace
-
-ax_posicion = axs[0,0]
-ax_intensidad = axs[0,1]
-ax_voltaje = axs[1,0]
-ax_torque = axs[1,1]
+ax_posicion = axs[0, 0]
+ax_intensidad = axs[0, 1]
+ax_voltaje = axs[1, 0]
+ax_torque = axs[1, 1]
 
 timestamps = []
 positions = []
@@ -102,9 +110,32 @@ intensities = []
 voltages = []
 torques = []
 
-# Integrar los gráficos en la ventana de Tkinter usando FigureCanvasTkAgg
+# Integrar los gráficos en la ventana de Tkinter usando FigureCanvasTkAg
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.get_tk_widget().grid(row=1, column=0)
+
+# Etiqueta y entrada de texto para el envío MQTT
+frame_top = ttk.Frame(root)
+frame_top.grid(row=0, column=0, padx=10, pady=10)
+
+texto_label = ttk.Label(frame_top, text="Texto a enviar a ODrive:")
+texto_label.grid(row=0, column=0, padx=5, pady=5, sticky="E")
+
+texto_input = ttk.Entry(frame_top)
+texto_input.grid(row=1, column=0, padx=5, pady=5)
+
+# Botones para enviar y descargar datos
+frame_buttons = ttk.Frame(root)
+frame_buttons.grid(row=0, column=0, padx=10, pady=10)
+
+enviar_button = ttk.Button(frame_top, text="Enviar a ODrive", command=enviar_a_odrive)
+enviar_button.grid(row=0, column=3, padx=5, pady=5)
+
+cerrar_button = ttk.Button(frame_top, text="X", command=cerrar_aplicacion)
+cerrar_button.grid(row=0, column=5, padx=5, pady=5, sticky="NE")
+
+download_button = ttk.Button(frame_top, text="Descargar Datos", command=descargar_datos)
+download_button.grid(row=1, column=3, padx=5, pady=5)
 
 # Inicia la interfaz gráfica
 root.mainloop()
