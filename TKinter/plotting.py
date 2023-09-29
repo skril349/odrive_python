@@ -5,6 +5,9 @@ import paho.mqtt.client as mqtt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from screeninfo import get_monitors
+import pandas as pd
+import time
+import tkinter.filedialog as filedialog
 
 # Configuración MQTT
 mqtt_host = "tonivivescabaleiro.com"
@@ -18,15 +21,35 @@ def enviar_a_odrive():
     publish.single(mqtt_topic_odrive, texto, hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
 
 def cerrar_aplicacion():
+    descargar_datos()
     root.quit()
 
 
 
 # Función para descargar datos (agrega tu funcionalidad)
 def descargar_datos():
-    pass  # Agrega aquí tu lógica para descargar datos
+    try:
+        data = {
+            "Timestamp": timestamps,
+            "Position": positions,
+            "Intensity": intensities,
+            "Voltage": voltages
+        }
+        
+        # Permite al usuario seleccionar la ubicación y nombre del archivo
+        file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
+        
+        if file_path:
+            df = pd.DataFrame(data)
+            df.to_excel(file_path, index=False, engine="openpyxl")
+            print(f"Datos guardados en: {file_path}")
+        else:
+            print("Operación de guardado cancelada.")
+    except Exception as e:
+        print(f"Error al guardar los datos: {str(e)}")
 
 # Función de callback cuando se recibe un mensaje MQTT en el tópico "data"
+
 def on_message(client, userdata, msg):
     try:
         data = msg.payload.decode("utf-8")
@@ -131,11 +154,9 @@ frame_buttons.grid(row=0, column=0, padx=10, pady=10)
 enviar_button = ttk.Button(frame_top, text="Enviar a ODrive", command=enviar_a_odrive)
 enviar_button.grid(row=0, column=3, padx=5, pady=5)
 
-cerrar_button = ttk.Button(frame_top, text="X", command=cerrar_aplicacion)
+cerrar_button = ttk.Button(frame_top, text="save and close", command=cerrar_aplicacion)
 cerrar_button.grid(row=0, column=5, padx=5, pady=5, sticky="NE")
 
-download_button = ttk.Button(frame_top, text="Descargar Datos", command=descargar_datos)
-download_button.grid(row=1, column=3, padx=5, pady=5)
 
 # Inicia la interfaz gráfica
 root.mainloop()
