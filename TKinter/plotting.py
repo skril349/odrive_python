@@ -11,7 +11,7 @@ mqtt_host = "tonivivescabaleiro.com"
 mqtt_port = 1883
 mqtt_topic_odrive = "odrive"
 mqtt_topic_data = "data"
-
+ 
 # Función para enviar el texto por MQTT
 def enviar_a_odrive():
     texto = texto_input.get()
@@ -109,7 +109,7 @@ positions = []
 intensities = []
 voltages = []
 torques = []
-
+finalData = []
 # Integrar los gráficos en la ventana de Tkinter usando FigureCanvasTkAg
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.get_tk_widget().grid(row=1, column=0)
