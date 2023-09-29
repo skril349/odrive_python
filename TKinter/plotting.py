@@ -88,13 +88,13 @@ download_button = ttk.Button(frame, text="descargar datos")
 download_button.grid(row=0, column=3)
 
 # Configuración para los gráficos en tiempo real
-fig, axs = plt.subplots(4, 1, figsize=(6, 8), sharex=True)
-fig.subplots_adjust(hspace=0.5)
+fig, axs = plt.subplots(2, 2, figsize=(6, 8), sharex=True)
+fig.subplots_adjust(hspace=0.5, wspace=0.5)  # Ajusta el espacio horizontal con wspace
 
-ax_posicion = axs[0]
-ax_intensidad = axs[1]
-ax_voltaje = axs[2]
-ax_torque = axs[3]
+ax_posicion = axs[0,0]
+ax_intensidad = axs[0,1]
+ax_voltaje = axs[1,0]
+ax_torque = axs[1,1]
 
 timestamps = []
 positions = []
