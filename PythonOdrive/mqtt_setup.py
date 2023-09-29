@@ -6,8 +6,8 @@ received_message = False  # Inicializa la variable en este módulo
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code {0}".format(str(rc)))
-    client.subscribe("odrive")
-    client.subscribe("data")
+    client.subscribe("odrive", qos=2)
+    client.subscribe("data", qos=2)
 
 def on_message(client, userdata, msg):
     global message_payload  # Almacenamos el valor del mensaje

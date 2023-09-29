@@ -70,7 +70,6 @@ try:
 
         
         if get_received_message() == True:
-            
             # Update the plot
            
             # Set the position setpoint

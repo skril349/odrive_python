@@ -34,8 +34,8 @@ my_drive.axis0.controller.config.vel_limit = 100
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code {0}".format(str(rc)))
-    client.subscribe("odrive")
-    client.subscribe("data")
+    client.subscribe("odrive",qos=1)
+    client.subscribe("data",qos=1)
 
 def on_message(client, userdata, msg):
     global received_message  # Usamos la bandera global
@@ -131,12 +131,13 @@ try:
 
         plt.pause(0.01)
 
+        print("fora received message = "+ str(received_message))
 
         
         if received_message == True:
             
             # Update the plot
-           
+            print("dins received message = "+ str(received_message))
             # Set the position setpoint
             my_drive.axis0.controller.input_pos = setpoint
 
