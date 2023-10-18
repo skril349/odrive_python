@@ -8,7 +8,8 @@ from screeninfo import get_monitors
 import pandas as pd
 import time
 import tkinter.filedialog as filedialog
-
+import datetime
+t0 = time.monotonic()
 # Configuración MQTT
 mqtt_host = "tonivivescabaleiro.com"
 mqtt_port = 1883
@@ -19,6 +20,8 @@ mqtt_topic_data = "data"
 def enviar_a_odrive():
     texto = texto_input.get()
     publish.single(mqtt_topic_odrive, texto, hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
+    # Agrega el instante de tiempo actual a la lista
+    time_instant.append(timestamps[-1])
 
 def cerrar_aplicacion():
     descargar_datos()
@@ -88,6 +91,10 @@ def actualizar_graficos():
     
     ax_torque.clear()
     ax_torque.plot(timestamps, torques)
+    # Agrega líneas verticales en el gráfico de torque en los instantes de tiempo almacenados en la lista 'time_instant'
+    for instant in time_instant:
+        ax_torque.axvline(x=instant, color='r', linestyle='--')
+   
     ax_torque.set_xlabel("Tiempo")
     ax_torque.set_ylabel("Torque")
     ax_torque.set_title("Torque en Tiempo Real")
@@ -133,6 +140,8 @@ intensities = []
 voltages = []
 torques = []
 finalData = []
+time_instant = []
+
 # Integrar los gráficos en la ventana de Tkinter usando FigureCanvasTkAg
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.get_tk_widget().grid(row=1, column=0)
