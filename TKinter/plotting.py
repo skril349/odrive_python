@@ -9,6 +9,10 @@ import pandas as pd
 import time
 import tkinter.filedialog as filedialog
 import datetime
+from openpyxl import load_workbook
+from openpyxl.styles import Font  # Agregar esta línea para importar Font
+
+
 t0 = time.monotonic()
 # Configuración MQTT
 mqtt_host = "tonivivescabaleiro.com"
@@ -30,21 +34,62 @@ def cerrar_aplicacion():
 
 
 # Función para descargar datos (agrega tu funcionalidad)
+# def descargar_datos():
+#     try:
+#         data = {
+#             "Timestamp": timestamps,
+#             "Position": positions,
+#             "Intensity": intensities,
+#             "Voltage": voltages,
+#             "buttonPressed": time_instant
+#         }
+        
+#         # Permite al usuario seleccionar la ubicación y nombre del archivo
+#         file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
+        
+#         if file_path:
+#             df = pd.DataFrame(data)
+#             df.to_excel(file_path, index=False, engine="openpyxl")
+#             print(f"Datos guardados en: {file_path}")
+#         else:
+#             print("Operación de guardado cancelada.")
+#     except Exception as e:
+#         print(f"Error al guardar los datos: {str(e)}")
 def descargar_datos():
+    print(time_instant)
     try:
         data = {
             "Timestamp": timestamps,
             "Position": positions,
             "Intensity": intensities,
-            "Voltage": voltages
+            "Voltage": voltages,
+            #"buttonPressed": time_instant
         }
-        
+
         # Permite al usuario seleccionar la ubicación y nombre del archivo
         file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
-        
+
         if file_path:
             df = pd.DataFrame(data)
             df.to_excel(file_path, index=False, engine="openpyxl")
+
+            # Cargar el archivo Excel creado para modificarlo
+            book = load_workbook(file_path)
+            writer = pd.ExcelWriter(file_path, engine='openpyxl')
+            writer.book = book
+
+            # Seleccionar la hoja en la que deseas trabajar
+            writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+            sheet = book.active
+
+            # Buscar y poner en negrita los valores más cercanos
+            for value in time_instant:
+                closest_timestamp = min(timestamps, key=lambda x: abs(x - value))
+                cell = sheet.cell(row=timestamps.index(closest_timestamp) + 2, column=1)
+                cell.font = Font(bold=True)
+
+            writer.save()
+            writer.close()
             print(f"Datos guardados en: {file_path}")
         else:
             print("Operación de guardado cancelada.")
