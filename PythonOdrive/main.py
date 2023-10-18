@@ -5,7 +5,7 @@ from odrive_setup import setup_odrive
 from plotter import update_plot
 from collections import deque
 from mqtt_setup import setup_mqtt, get_received_message, set_received_message, get_setpoint
-
+import datetime
 
 # Configuración de ODrive y MQTT
 my_drive = setup_odrive()
@@ -32,16 +32,16 @@ fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 8))
 # Main loop for data collection and plotting
 t0 = time.monotonic()
 i = 0
-
+n = 0
 try:
     
     while True: 
-        position = my_drive.axis0.encoder.pos_estimate
-        position2 = my_drive.axis0.motor.I_bus
+        position = my_drive.axis1.encoder.pos_estimate
+        position2 = my_drive.axis1.motor.I_bus
 
-        intensity = my_drive.axis0.motor.current_control.Iq_measured
+        intensity = my_drive.axis1.motor.current_control.Iq_measured
         voltage = my_drive.vbus_voltage
-        torque = ((8.27*my_drive.axis0.motor.current_control.Iq_setpoint/150) * 100)
+        torque = ((8.27*my_drive.axis1.motor.current_control.Iq_setpoint/150) * 100)
         # Append data to lists
         timestamps.append(time.monotonic() - t0)
         positions.append(position)
@@ -71,15 +71,17 @@ try:
         
         if get_received_message() == True:
             # Update the plot
-           
+            
             # Set the position setpoint
-            my_drive.axis0.controller.input_pos = get_setpoint()
+            my_drive.axis1.controller.input_pos = get_setpoint()
 
-            current_state = my_drive.axis0.current_state
-
+            current_state = my_drive.axis1.current_state
            
-            if my_drive.axis0.controller.trajectory_done:
+           
+            if my_drive.axis1.controller.trajectory_done:
+
                 set_received_message(False)
+                print("False")
                 if get_setpoint() == 0:
                     final_data_to_publish={
                     "timestamp":timestamps,

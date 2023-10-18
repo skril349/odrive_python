@@ -18,7 +18,7 @@ def on_message(client, userdata, msg):
         setpoint = float(message_payload.decode("utf-8"));
         received_message = True  # Cambiamos la bandera a True cuando se recibe un mensaje
         print(received_message)
-
+    
 def setup_mqtt():
     client = mqtt.Client("digi_mqtt_test")
     client.on_connect = on_connect
