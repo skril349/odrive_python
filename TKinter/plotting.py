@@ -27,6 +27,12 @@ def enviar_a_odrive():
     # Agrega el instante de tiempo actual a la lista
     time_instant.append(timestamps[-1])
 
+      # Programar el envío de 0 después del tiempo especificado
+    root.after(int(tiempo_input.get()) * 1000, enviar_cero)
+
+def enviar_cero():
+    publish.single(mqtt_topic_odrive, "0", hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
+
 def cerrar_aplicacion():
     descargar_datos()
     root.quit()
@@ -200,6 +206,13 @@ texto_label.grid(row=0, column=0, padx=5, pady=5, sticky="E")
 
 texto_input = ttk.Entry(frame_top)
 texto_input.grid(row=1, column=0, padx=5, pady=5)
+
+# Nueva entrada de texto para el tiempo
+tiempo_label = ttk.Label(frame_top, text="Tiempo de espera (segundos):")
+tiempo_label.grid(row=0, column=1, padx=5, pady=5, sticky="E")
+
+tiempo_input = ttk.Entry(frame_top)
+tiempo_input.grid(row=1, column=1, padx=5, pady=5)
 
 # Botones para enviar y descargar datos
 frame_buttons = ttk.Frame(root)
