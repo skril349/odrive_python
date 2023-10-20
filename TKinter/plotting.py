@@ -22,8 +22,11 @@ mqtt_topic_data = "data"
  
 # Función para enviar el texto por MQTT
 def enviar_a_odrive():
-    texto = texto_input.get()
-    publish.single(mqtt_topic_odrive, texto, hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
+    texto = float(texto_input.get()) * 58/43
+    print("texto = ",texto)
+    text_to_send = str(texto)
+    print("text to send = ",text_to_send)
+    publish.single(mqtt_topic_odrive, text_to_send, hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
     # Agrega el instante de tiempo actual a la lista
     time_instant.append(timestamps[-1])
 
@@ -108,9 +111,10 @@ def on_message(client, userdata, msg):
     try:
         data = msg.payload.decode("utf-8")
         data_dict = eval(data)
-        if isinstance(data_dict, dict) and "timestamp" in data_dict and "position" in data_dict and "intensity" in data_dict and "voltage" in data_dict and "torque" in data_dict:
+        if isinstance(data_dict, dict) and "timestamp" in data_dict and "position" in data_dict and "intensity" in data_dict and "voltage" in data_dict and "torque" in data_dict :
             timestamps.append(data_dict["timestamp"])
-            positions.append(data_dict["position"])
+            positions.append(data_dict["position"]*43/58)
+            motor_positions.append(data_dict["position"])
             intensities.append(data_dict["intensity"])
             voltages.append(data_dict["voltage"])
             torques.append(data_dict["torque"])
@@ -123,7 +127,8 @@ def on_message(client, userdata, msg):
 # Función para actualizar los gráficos en tiempo real
 def actualizar_graficos():
     ax_posicion.clear()
-    ax_posicion.plot(timestamps, positions)
+    ax_posicion.plot(timestamps, positions, color='b')
+    ax_posicion.plot(timestamps, motor_positions, color='r')
     ax_posicion.set_xlabel("Tiempo")
     ax_posicion.set_ylabel("Posición")
     ax_posicion.set_title("Posición en Tiempo Real")
@@ -164,7 +169,8 @@ root = tk.Tk()
 root.title("Envío a ODrive y Gráficos en Tiempo Real")
 
 # Hacer que la ventana sea pantalla completa
-root.attributes('-fullscreen', True)
+
+#root.attributes('-fullscreen', True)
 
 # Obtiene el tamaño de la pantalla
 monitors = get_monitors()
@@ -192,7 +198,7 @@ voltages = []
 torques = []
 finalData = []
 time_instant = []
-
+motor_positions = []
 # Integrar los gráficos en la ventana de Tkinter usando FigureCanvasTkAg
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.get_tk_widget().grid(row=1, column=0)
