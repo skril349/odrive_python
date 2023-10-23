@@ -17,7 +17,7 @@ def on_message(client, userdata, msg):
     if msg.topic == "odrive":
         setpoint = float(message_payload.decode("utf-8"));
         received_message = True  # Cambiamos la bandera a True cuando se recibe un mensaje
-        print(received_message)
+        #print(received_message)
     
 def setup_mqtt():
     client = mqtt.Client("digi_mqtt_test")

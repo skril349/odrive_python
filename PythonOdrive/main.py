@@ -81,7 +81,6 @@ try:
             if my_drive.axis1.controller.trajectory_done:
 
                 set_received_message(False)
-                print("False")
                 if get_setpoint() == 0:
                     final_data_to_publish={
                     "timestamp":timestamps,
