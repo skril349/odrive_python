@@ -64,6 +64,7 @@ def cerrar_aplicacion():
 #             print("Operación de guardado cancelada.")
 #     except Exception as e:
 #         print(f"Error al guardar los datos: {str(e)}")
+
 def descargar_datos():
     print(time_instant)
     try:
@@ -104,7 +105,7 @@ def descargar_datos():
             print("Operación de guardado cancelada.")
     except Exception as e:
         print(f"Error al guardar los datos: {str(e)}")
-
+        
 # Función de callback cuando se recibe un mensaje MQTT en el tópico "data"
 
 def on_message(client, userdata, msg):
