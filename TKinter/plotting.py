@@ -31,7 +31,7 @@ def enviar_a_odrive():
     time_instant.append(timestamps[-1])
 
       # Programar el envío de 0 después del tiempo especificado
-    root.after(int(tiempo_input.get()) * 1000, enviar_cero)
+    #root.after(int(tiempo_input.get()) * 1000, enviar_cero)
 
 def enviar_cero():
     publish.single(mqtt_topic_odrive, "0", hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
@@ -105,7 +105,7 @@ def descargar_datos():
             print("Operación de guardado cancelada.")
     except Exception as e:
         print(f"Error al guardar los datos: {str(e)}")
-        
+
 # Función de callback cuando se recibe un mensaje MQTT en el tópico "data"
 
 def on_message(client, userdata, msg):
