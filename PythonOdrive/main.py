@@ -34,7 +34,7 @@ t0 = time.monotonic()
 i = 0
 n = 0
 try:
-    
+ #infinite loop   
     while True: 
         position = my_drive.axis1.encoder.pos_estimate
         position2 = my_drive.axis1.motor.I_bus
