@@ -111,8 +111,56 @@ def cerrar_aplicacion():
 #     except Exception as e:
 #         print(f"Error al guardar los datos: {str(e)}")
 
+# def descargar_datos():
+#     try:
+#         data = {
+#             "Timestamp": timestamps,
+#             "Position": positions,
+#             "Intensity": intensities,
+#             "Voltage": voltages,
+#             "Times Instants": times_instants
+#         }
+
+#         # Permite al usuario seleccionar la ubicación y nombre del archivo
+#         file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
+
+#         if file_path:
+#             df = pd.DataFrame(data)
+#             df.to_excel(file_path, index=False, engine="openpyxl")
+
+#             # Cargar el archivo Excel creado para modificarlo
+#             book = load_workbook(file_path)
+#             writer = pd.ExcelWriter(file_path, engine='openpyxl')
+#             writer.book = book
+
+#             # Seleccionar la hoja en la que deseas trabajar
+#             writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+#             sheet = book.active
+
+#             # Buscar y poner en negrita los valores más cercanos
+#             for value in time_instant:
+#                 closest_timestamp = min(timestamps, key=lambda x: abs(x - value))
+#                 index = timestamps.index(closest_timestamp) + 2      
+#                 cell = sheet.cell(row=index, column=5)
+#                 cell.value = value              
+#                 # Reemplazar el valor en times_instants
+#                 times_instants[index - 2] = value
+#                 print(time)
+#             writer.save()
+#             writer.close()
+#             print(f"Datos guardados en: {file_path}")
+#         else:
+#             print("Operación de guardado cancelada.")
+#     except Exception as e:
+#         print(f"Error al guardar los datos: {str(e)}")# Función de callback cuando se recibe un mensaje MQTT en el tópico "data"
+
 def descargar_datos():
+    
     try:
+        for value in time_instant:
+            closest_timestamp = min(timestamps, key=lambda x: abs(x - value))
+            index = timestamps.index(closest_timestamp) + 2      
+            times_instants[index - 2] = value
         data = {
             "Timestamp": timestamps,
             "Position": positions,
@@ -128,31 +176,11 @@ def descargar_datos():
             df = pd.DataFrame(data)
             df.to_excel(file_path, index=False, engine="openpyxl")
 
-            # Cargar el archivo Excel creado para modificarlo
-            book = load_workbook(file_path)
-            writer = pd.ExcelWriter(file_path, engine='openpyxl')
-            writer.book = book
-
-            # Seleccionar la hoja en la que deseas trabajar
-            writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
-            sheet = book.active
-
-            # Buscar y poner en negrita los valores más cercanos
-            for value in time_instant:
-                closest_timestamp = min(timestamps, key=lambda x: abs(x - value))
-                index = timestamps.index(closest_timestamp) + 2      
-                cell = sheet.cell(row=index, column=5)
-                cell.value = value              
-                # Reemplazar el valor en times_instants
-                times_instants[index - 2] = value
-                print(time)
-            writer.save()
-            writer.close()
             print(f"Datos guardados en: {file_path}")
         else:
             print("Operación de guardado cancelada.")
     except Exception as e:
-        print(f"Error al guardar los datos: {str(e)}")# Función de callback cuando se recibe un mensaje MQTT en el tópico "data"
+        print(f"Error al guardar los datos: {str(e)}")
 
 def on_message(client, userdata, msg):
     try:
