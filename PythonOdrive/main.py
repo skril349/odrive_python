@@ -103,7 +103,5 @@ try:
                     client.publish("finalData", str(final_data_to_publish))
                     set_received_message(False)
 
-
-
 except KeyboardInterrupt:
     pass
