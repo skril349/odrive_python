@@ -10,7 +10,7 @@ import datetime
 # Configuración de ODrive y MQTT
 my_drive = setup_odrive()
 client = setup_mqtt()
-
+plot_or_not = True
 # Mantén el bucle hasta que se reciba un mensaje
 while get_received_message() == False:
     pass  # Espera hasta que get_received_message() sea True
@@ -27,7 +27,8 @@ torques = []
 # Enabling interactive mode for real-time plotting
 plt.ion()
 # Create a figure for plotting
-fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 8))
+if plot_or_not:
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 8))
 
 # Main loop for data collection and plotting
 t0 = time.monotonic()
@@ -50,9 +51,6 @@ try:
         torques.append(torque)
      
         data_queue.append(positions[-1])
-        print("data queue = ",len(data_queue))
-        print("intensities = ",len(intensities))
-
         if len(intensities) > max_data_points:
             intensities.pop(0)
             voltages.pop(0)
@@ -60,10 +58,9 @@ try:
             positions.pop(0)
             timestamps.pop(0)
 
-            print(len(data_queue))
-
-        update_plot(timestamps[-max_data_points:], data_queue, intensities[-max_data_points:],
-                    voltages[-max_data_points:], torques[-max_data_points:], ax1, ax2, ax3, ax4)
+        if plot_or_not:
+            update_plot(timestamps[-max_data_points:], data_queue, intensities[-max_data_points:],
+                        voltages[-max_data_points:], torques[-max_data_points:], ax1, ax2, ax3, ax4)
         
 
         data_to_publish={
