@@ -50,6 +50,9 @@ try:
         torques.append(torque)
      
         data_queue.append(positions[-1])
+        
+        if len(data_queue) > max_data_points:
+            data_queue.popleft()
 
         update_plot(timestamps[-max_data_points:], data_queue, intensities[-max_data_points:],
                     voltages[-max_data_points:], torques[-max_data_points:], ax1, ax2, ax3, ax4)
