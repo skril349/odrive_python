@@ -69,15 +69,9 @@ try:
 
         update_plot(timestamps[-max_data_points:], data_queue, intensities[-max_data_points:],
                         voltages[-max_data_points:], torques[-max_data_points:], ax1, ax2, ax3, ax4)
-        
-
-        
-
 
         plt.pause(0.01)
-
-
-        
+  
         if get_received_message() == True:
             # Update the plot
             
