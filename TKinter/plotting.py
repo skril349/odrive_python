@@ -31,7 +31,7 @@ def enviar_a_odrive():
     time_instant.append(timestamps[-1])
 
       # Programar el envío de 0 después del tiempo especificado
-    #root.after(int(tiempo_input.get()) * 1000, enviar_cero)
+    root.after(int(tiempo_input.get()) * 1000, enviar_cero)
 
 def enviar_cero():
     publish.single(mqtt_topic_odrive, "0", hostname=mqtt_host, port=mqtt_port, qos=2, retain=True)
@@ -40,79 +40,13 @@ def cerrar_aplicacion():
     descargar_datos()
     root.quit()
 
-
-
-# Función para descargar datos (agrega tu funcionalidad)
-# def descargar_datos():
-#     try:
-#         data = {
-#             "Timestamp": timestamps,
-#             "Position": positions,
-#             "Intensity": intensities,
-#             "Voltage": voltages,
-#             "buttonPressed": time_instant
-#         }
-        
-#         # Permite al usuario seleccionar la ubicación y nombre del archivo
-#         file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
-        
-#         if file_path:
-#             df = pd.DataFrame(data)
-#             df.to_excel(file_path, index=False, engine="openpyxl")
-#             print(f"Datos guardados en: {file_path}")
-#         else:
-#             print("Operación de guardado cancelada.")
-#     except Exception as e:
-#         print(f"Error al guardar los datos: {str(e)}")
-
-# def descargar_datos():
-#     print(time_instant)
-#     try:
-#         data = {
-#             "Timestamp": timestamps,
-#             "Position": positions,
-#             "Intensity": intensities,
-#             "Voltage": voltages,
-#             "Times Instants": times_instants
-#         }
-
-#         # Permite al usuario seleccionar la ubicación y nombre del archivo
-#         file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
-
-#         if file_path:
-#             df = pd.DataFrame(data)
-#             df
-#             df.to_excel(file_path, index=False, engine="openpyxl")
-            
-#             # Cargar el archivo Excel creado para modificarlo
-#             book = load_workbook(file_path)
-#             writer = pd.ExcelWriter(file_path, engine='openpyxl')
-#             writer.book = book
-
-#             # Seleccionar la hoja en la que deseas trabajar
-#             writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
-#             sheet = book.active
-
-#             # Buscar y poner en negrita los valores más cercanos
-#             array_indices = [1 if value in time_instant else 0 for value in timestamps]
-
-#             for value in time_instant:
-#                 closest_timestamp = min(timestamps, key=lambda x: abs(x - value))
-#                 cell = sheet.cell(row=timestamps.index(closest_timestamp) + 2, column=1)
-#                 cell.font = Font(bold=True)
-#             print(array_indices)
-
-
-#             writer.save()
-#             writer.close()
-#             print(f"Datos guardados en: {file_path}")
-#         else:
-#             print("Operación de guardado cancelada.")
-#     except Exception as e:
-#         print(f"Error al guardar los datos: {str(e)}")
-
 def descargar_datos():
+    
     try:
+        for value in time_instant:
+            closest_timestamp = min(timestamps, key=lambda x: abs(x - value))
+            index = timestamps.index(closest_timestamp) + 2      
+            times_instants[index - 2] = value
         data = {
             "Timestamp": timestamps,
             "Position": positions,
@@ -128,31 +62,11 @@ def descargar_datos():
             df = pd.DataFrame(data)
             df.to_excel(file_path, index=False, engine="openpyxl")
 
-            # Cargar el archivo Excel creado para modificarlo
-            book = load_workbook(file_path)
-            writer = pd.ExcelWriter(file_path, engine='openpyxl')
-            writer.book = book
-
-            # Seleccionar la hoja en la que deseas trabajar
-            writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
-            sheet = book.active
-
-            # Buscar y poner en negrita los valores más cercanos
-            for value in time_instant:
-                closest_timestamp = min(timestamps, key=lambda x: abs(x - value))
-                index = timestamps.index(closest_timestamp) + 2      
-                cell = sheet.cell(row=index, column=5)
-                cell.value = value              
-                # Reemplazar el valor en times_instants
-                times_instants[index - 2] = value
-                print(time)
-            writer.save()
-            writer.close()
             print(f"Datos guardados en: {file_path}")
         else:
             print("Operación de guardado cancelada.")
     except Exception as e:
-        print(f"Error al guardar los datos: {str(e)}")# Función de callback cuando se recibe un mensaje MQTT en el tópico "data"
+        print(f"Error al guardar los datos: {str(e)}")
 
 def on_message(client, userdata, msg):
     try:
@@ -176,20 +90,20 @@ def actualizar_graficos():
     ax_posicion.clear()
     ax_posicion.plot(timestamps, positions, color='b')
     ax_posicion.plot(timestamps, motor_positions, color='r')
-    ax_posicion.set_xlabel("Tiempo")
-    ax_posicion.set_ylabel("Posición")
+    ax_posicion.set_xlabel("Tiempo (s)")
+    ax_posicion.set_ylabel("Posición (vueltas)")
     ax_posicion.set_title("Posición en Tiempo Real")
     
     ax_intensidad.clear()
     ax_intensidad.plot(timestamps, intensities)
-    ax_intensidad.set_xlabel("Tiempo")
-    ax_intensidad.set_ylabel("Intensidad")
+    ax_intensidad.set_xlabel("Tiempo (s)")
+    ax_intensidad.set_ylabel("Intensidad (A)")
     ax_intensidad.set_title("Intensidad en Tiempo Real")
     
     ax_voltaje.clear()
     ax_voltaje.plot(timestamps, voltages)
-    ax_voltaje.set_xlabel("Tiempo")
-    ax_voltaje.set_ylabel("Voltaje")
+    ax_voltaje.set_xlabel("Tiempo (s)")
+    ax_voltaje.set_ylabel("Voltaje (V)")
     ax_voltaje.set_title("Voltaje en Tiempo Real")
     
     ax_torque.clear()
@@ -198,8 +112,8 @@ def actualizar_graficos():
     for instant in time_instant:
         ax_torque.axvline(x=instant, color='r', linestyle='--')
    
-    ax_torque.set_xlabel("Tiempo")
-    ax_torque.set_ylabel("Torque")
+    ax_torque.set_xlabel("Tiempo (s)")
+    ax_torque.set_ylabel("Torque (N·cm)")
     ax_torque.set_title("Torque en Tiempo Real")
     
     canvas.draw()

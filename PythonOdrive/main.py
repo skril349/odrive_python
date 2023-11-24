@@ -10,7 +10,7 @@ import datetime
 # Configuración de ODrive y MQTT
 my_drive = setup_odrive()
 client = setup_mqtt()
-
+plot_or_not = False
 # Mantén el bucle hasta que se reciba un mensaje
 while get_received_message() == False:
     pass  # Espera hasta que get_received_message() sea True
@@ -24,6 +24,7 @@ positions = []
 intensities = []
 voltages = []
 torques = []
+
 # Enabling interactive mode for real-time plotting
 plt.ion()
 # Create a figure for plotting
@@ -48,12 +49,6 @@ try:
         intensities.append(intensity)
         voltages.append(voltage)
         torques.append(torque)
-     
-        data_queue.append(positions[-1])
-
-        update_plot(timestamps[-max_data_points:], data_queue, intensities[-max_data_points:],
-                    voltages[-max_data_points:], torques[-max_data_points:], ax1, ax2, ax3, ax4)
-        
 
         data_to_publish={
         "timestamp":(time.monotonic() - t0),
@@ -63,12 +58,20 @@ try:
         "torque" :torque
         }
         client.publish("data", str(data_to_publish))
+     
+        data_queue.append(positions[-1])
+        if len(intensities) > max_data_points:
+            intensities.pop(0)
+            voltages.pop(0)
+            torques.pop(0)
+            positions.pop(0)
+            timestamps.pop(0)
 
+        update_plot(timestamps[-max_data_points:], data_queue, intensities[-max_data_points:],
+                        voltages[-max_data_points:], torques[-max_data_points:], ax1, ax2, ax3, ax4)
 
         plt.pause(0.01)
-
-
-        
+  
         if get_received_message() == True:
             # Update the plot
             
@@ -91,8 +94,6 @@ try:
                     }
                     # client.publish("finalData", str(final_data_to_publish))
                     set_received_message(False)
-
-
 
 except KeyboardInterrupt:
     pass
