@@ -37,12 +37,11 @@ n = 0
 try:
  #infinite loop   
     while True: 
-        position = my_drive.axis1.encoder.pos_estimate
-        position2 = my_drive.axis1.motor.I_bus
-
-        intensity = my_drive.axis1.motor.current_control.Iq_measured
+        position = my_drive.axis0.encoder.pos_estimate
+        position2 = my_drive.axis0.motor.I_bus
+        intensity = my_drive.axis0.motor.current_control.Iq_measured
         voltage = my_drive.vbus_voltage
-        torque = ((8.27*my_drive.axis1.motor.current_control.Iq_setpoint/150) * 100)
+        torque = ((8.27*my_drive.axis0.motor.current_control.Iq_setpoint/150) * 100)
         # Append data to lists
         timestamps.append(time.monotonic() - t0)
         positions.append(position)
@@ -76,12 +75,12 @@ try:
             # Update the plot
             
             # Set the position setpoint
-            my_drive.axis1.controller.input_pos = get_setpoint()
+            my_drive.axis0.controller.input_pos = get_setpoint()
 
-            current_state = my_drive.axis1.current_state
+            current_state = my_drive.axis0.current_state
            
            
-            if my_drive.axis1.controller.trajectory_done:
+            if my_drive.axis0.controller.trajectory_done:
 
                 set_received_message(False)
                 if get_setpoint() == 0:
